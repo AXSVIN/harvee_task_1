@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  # --- Backend Service ---
+  backend:
+    container_name: mern-backend
+    # Use the custom Dockerfile for the backend
+    build:
+      context: ./backend # Adjust if your backend folder name is different
+      dockerfile: Dockerfile
+    ports:
+      # Map host:container port (e.g., access via http://localhost:5000)
+      - "5000:5000"
+    volumes:
+      - ./backend/uploads:/app/uploads
+    # Ensures the backend starts before the client tries to call it
+    depends_on:
+      - mongodb
+
+  # --- Client Service ---
+  client:
+    container_name: mern-client
+    # Use the custom Dockerfile for the client
+    build:
+      context: ./client # Adjust if your client folder name is different
+      dockerfile: Dockerfile
+    ports:
+      # Map host:container port (e.g., access via http://localhost:80)
+      - "80:80"
+    environment:
+      REACT_APP_API_URL: http://backend:5000
+    depends_on:
+      - backend
+
+  # --- Database Service (MongoDB) ---
+  mongodb:
+    image: mongo:latest
+    container_name: mern-mongodb
+    ports:
+      # Optionally expose MongoDB port (not strictly necessary for the app to run)
+      - "27017:27017"
+    volumes:
+      # Persistent data storage for the database
+      - mongo-data:/data/db
+    # Optional: set a simple root user/password if you need security within the Docker network
+    # environment:
+    #   MONGO_INITDB_ROOT_USERNAME: user
+    #   MONGO_INITDB_ROOT_PASSWORD: password
+
+# Define volumes for persistent data
+volumes:
+  mongo-data:
